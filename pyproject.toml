@@ -1,0 +1,26 @@
+[project]
+name = "co2-injection-simulation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "ellingsvee", email = "elling.svee@gmail.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10.6",
+    "numpy>=2.3.3",
+    "pathlib>=1.0.1",
+]
+
+[tool.maturin]
+module-name = "co2_injection_simulation.rust_backend"
+python-packages = ["co2_injection_simulation"]
+python-source = "src"
+manifest-path = "Cargo.toml"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
