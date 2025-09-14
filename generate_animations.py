@@ -1,4 +1,7 @@
-from co2_injection_simulation.plot import plot_cross_section_animation, plot_birdseye_animation
+from co2_injection_simulation.plot import (
+    plot_birdseye_animation,
+    plot_cross_section_animation,
+)
 
 from co2_injection_simulation import PROJECT_ROOT
 import numpy as np
@@ -6,6 +9,7 @@ import numpy as np
 from co2_injection_simulation.setup import (
     retrieve_sleipner_topography,
 )
+import os
 
 
 # Load the snapshots from the simulation
@@ -17,18 +21,20 @@ nz = 100
 caprock_topography, depths = retrieve_sleipner_topography(nz=nz)
 
 # Create and save the animation
+plots_dir = PROJECT_ROOT / "plots"
+os.makedirs(plots_dir, exist_ok=True)
 plot_cross_section_animation(
     index=caprock_topography.shape[1] // 2,
     snapshots=snapshots,
     caprock_topography=caprock_topography,
     depths=depths,
-    save_path=PROJECT_ROOT / "plots" / "flood_fill_cross_section.gif",
+    save_path=plots_dir / "flood_fill_cross_section.gif",
     show=False,
 )
 plot_birdseye_animation(
     snapshots=snapshots,
     caprock_topography=caprock_topography,
     depths=depths,
-    save_path=PROJECT_ROOT / "plots" / "flood_fill_birdseye.gif",
+    save_path=plots_dir / "flood_fill_birdseye.gif",
     show=False,
 )

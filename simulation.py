@@ -9,12 +9,11 @@ from co2_injection_simulation import PROJECT_ROOT
 from co2_injection_simulation.velocity_model import single_source_co2_fill
 import numpy as np
 import time
+import os
 
 
 # Set constants
 nz = 100
-xy_extent = (3, 1)
-
 
 # Retrieve the model
 print("Debug: " + "Retireving Sleipner Model")
@@ -38,4 +37,6 @@ print("Debug: " + f"Simulation finished in {total_time:.2} sec!")
 
 # Save the snapshots array
 print("Debug: " + "Saving snapshots array")
-np.save(PROJECT_ROOT / "simulations" / "flood_fill_snapshots.npy", snapshots)
+simulations_dir = PROJECT_ROOT / "simulations"
+os.makedirs(simulations_dir, exist_ok=True)
+np.save(simulations_dir / "flood_fill_snapshots.npy", snapshots)
