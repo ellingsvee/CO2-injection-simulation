@@ -14,7 +14,7 @@ import os
 
 # Load the snapshots from the simulation
 print("Debug: " + "Loading snapshots array")
-snapshots = np.load(PROJECT_ROOT / "simulations" / "flood_fill_snapshots.npy")
+snapshots = np.load(PROJECT_ROOT / "simulations" / "snapshots.npy")
 
 # Set constants
 nz = 100
@@ -28,13 +28,13 @@ plot_cross_section_animation(
     snapshots=snapshots,
     caprock_topography=caprock_topography,
     depths=depths,
-    save_path=plots_dir / "flood_fill_cross_section.gif",
+    save_path=plots_dir / "cross_section.gif",
     show=False,
 )
 plot_birdseye_animation(
     snapshots=snapshots,
     caprock_topography=caprock_topography,
     depths=depths,
-    save_path=plots_dir / "flood_fill_birdseye.gif",
+    save_path=plots_dir / "birdseye.gif",
     show=False,
 )

@@ -39,4 +39,4 @@ print("Debug: " + f"Simulation finished in {total_time:.2} sec!")
 print("Debug: " + "Saving snapshots array")
 simulations_dir = PROJECT_ROOT / "simulations"
 os.makedirs(simulations_dir, exist_ok=True)
-np.save(simulations_dir / "flood_fill_snapshots.npy", snapshots)
+np.save(simulations_dir / "snapshots.npy", snapshots)
