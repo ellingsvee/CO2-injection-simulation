@@ -30,6 +30,7 @@ snapshots = single_source_co2_fill(
     depths=depths,
     source=(caprock_topography.shape[0] // 2, caprock_topography.shape[1] // 2),
     rust_implementation=True,  # Choose wether or not to use the rust_implementation
+    use_1d_implementation=True,  # Choose wether or not to use the 1D rust implementation
 )
 toc = time.time()
 total_time = toc - tic

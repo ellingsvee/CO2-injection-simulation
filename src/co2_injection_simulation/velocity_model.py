@@ -4,7 +4,8 @@ from typing import Tuple
 
 from co2_injection_simulation import VELOCITY_RESERVOIR, VELOCITY_CO2, VELOCITY_CAPROCK
 from co2_injection_simulation.rust_backend import (
-    _single_source_co2_fill_rust_with_buckets,
+    _single_source_co2_fill_rust,
+    _single_source_co2_fill_rust_1d,
 )
 
 
@@ -145,23 +146,56 @@ def single_source_co2_fill(
     depths: np.ndarray,  # (nz,)
     source: Tuple[int, int],  # (x, y)
     total_snapshots: int = 100,  # Number of snapshots to capture
-    rust_implementation: bool = False,
+    rust_implementation: bool = True,
+    use_1d_implementation: bool = True,  # New parameter for 1D vectors
 ) -> np.ndarray:  # (nx, ny, nz, total_snapshots)
     if rust_implementation:
-        # Ensure arrays have the correct data types for Rust
-        injection_matrix_i32 = injection_matrix.astype(np.int32)
-        topography_f64 = topography.astype(np.float64)
-        depths_f64 = depths.astype(np.float64)
+        if use_1d_implementation:
+            # Ensure arrays have the correct data types for Rust
+            injection_matrix_i32 = injection_matrix.astype(np.int32)
+            topography_f64 = topography.astype(np.float64)
+            depths_f64 = depths.astype(np.float64)
 
-        # Ensure arrays are contiguous
-        injection_matrix_i32 = np.ascontiguousarray(injection_matrix_i32)
-        topography_f64 = np.ascontiguousarray(topography_f64)
-        depths_f64 = np.ascontiguousarray(depths_f64)
+            # Ensure arrays are contiguous
+            injection_matrix_i32 = np.ascontiguousarray(injection_matrix_i32)
+            topography_f64 = np.ascontiguousarray(topography_f64)
+            depths_f64 = np.ascontiguousarray(depths_f64)
 
-        print("Debug: Using Rust implementation")
-        return _single_source_co2_fill_rust_with_buckets(
-            injection_matrix_i32, topography_f64, depths_f64, source, total_snapshots
-        )
+            # Get dimensions and flatten the injection matrix
+            nx, ny, nz = injection_matrix_i32.shape
+            injection_flat = injection_matrix_i32.flatten()
+
+            print("Debug: Using Rust 1D implementation")
+            result_flat = _single_source_co2_fill_rust_1d(
+                injection_flat,
+                topography_f64,
+                depths_f64,
+                (nx, ny, nz),
+                source,
+                total_snapshots,
+            )
+
+            # Reshape the result back to 3D
+            return result_flat.reshape((nx, ny, nz))
+        else:
+            # Ensure arrays have the correct data types for Rust
+            injection_matrix_i32 = injection_matrix.astype(np.int32)
+            topography_f64 = topography.astype(np.float64)
+            depths_f64 = depths.astype(np.float64)
+
+            # Ensure arrays are contiguous
+            injection_matrix_i32 = np.ascontiguousarray(injection_matrix_i32)
+            topography_f64 = np.ascontiguousarray(topography_f64)
+            depths_f64 = np.ascontiguousarray(depths_f64)
+
+            print("Debug: Using Rust implementation")
+            return _single_source_co2_fill_rust(
+                injection_matrix_i32,
+                topography_f64,
+                depths_f64,
+                source,
+                total_snapshots,
+            )
 
     else:
         return _single_source_co2_fill(
