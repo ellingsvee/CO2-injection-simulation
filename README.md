@@ -1,8 +1,10 @@
 # CO2 injection simulation
 
-A nearest-neighbour approach for simulating CO2 injection in a reservoir.
+A nearest-neighbour approach for simulating CO2 injection in a reservoir. 
 
-Uses Rust under the hood for efficient computations.
+Uses Rust under the hood for more efficient computations.
+
+![Birdseye](graphics/birdseye.gif)
 
 ## Prerequisites
 
@@ -15,8 +17,8 @@ Uses Rust under the hood for efficient computations.
 1. **Clone this repo:**
 
    ```bash
-   git clone git@github.com:ellingsvee/python-rust-template.git
-   cd python-rust-template
+   git clone git@github.com:ellingsvee/CO2-injection-simulation.git
+   cd CO2-injection-simulation
    ```
 
 2. **Install dependencies:**
@@ -42,12 +44,12 @@ Uses Rust under the hood for efficient computations.
 
 **Python code changes:**
 
-- Edit files in `src/python_rust_template/`
+- Edit files in `src/co2_injection_simulation/`
 - Changes are immediately available (editable install)
 
 **Rust code changes (IMPORTANT!):**
 
-- Edit files in `src/python_rust_template/rust_backend/`
+- Edit files in `src/rust_backend/`
 - Rebuild the extension:
 
   ```bash
