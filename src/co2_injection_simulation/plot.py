@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import Union
 
-from co2_injection_simulation import VELOCITY_CO2, VELOCITY_CAPROCK
+from co2_injection_simulation import VELOCITY_CO2, VELOCITY_CAPROCK, VELOCITY_RESERVOIR
 from co2_injection_simulation.utils import (
     get_matrix_from_snapshot,
 )
@@ -109,37 +109,10 @@ def plot_birdseye_animation(
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
-
-
-    # # The first frame is the unfilled reservoir
-    # injection_matrix = get_matrix_from_snapshot(
-    #     caprock_topography=caprock_topography,
-    #     depths=depths,
-    #     snapshots=snapshots,
-    #     snapshot_value=-1,
-    # )
-    # cross_section = injection_matrix[:, index, :]
-
     # Import velocity constants for proper scaling
     from co2_injection_simulation import VELOCITY_RESERVOIR
 
-    # Transpose so x is horizontal, depth is vertical
-    # im = ax.imshow(
-    #     cross_section.T,
-    #     aspect="auto",
-    #     # cmap="viridis",
-    #     cmap="RdBu_r",
-    #     origin="upper",
-    #     vmin=min(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
-    #     vmax=max(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
-    #     extent=(
-    #         0,
-    #         cross_section.shape[0],
-    #         depths[-1],
-    #         depths[0],
-    #     ),  # x from 0 to width, y from min to max physical depth
-    # )
-
+    # The first frame is the unfilled reservoir
     injection_matrix = get_matrix_from_snapshot(
         caprock_topography=caprock_topography,
         depths=depths,
@@ -147,6 +120,7 @@ def plot_birdseye_animation(
         snapshot_value=-1,
     )
 
+    # Set the cells with CO2 present to VELOCITY_CO2 to 1
     filled_birdseye = np.where(
         np.any(injection_matrix == VELOCITY_CO2, axis=2),
         VELOCITY_CO2,
@@ -159,20 +133,18 @@ def plot_birdseye_animation(
 
     def update(frame):
         print(f"Current frame: {frame}")
+        # Retrieve the injection matrix at the current snapshot
         injection_matrix_frame = get_matrix_from_snapshot(
             caprock_topography=caprock_topography,
             depths=depths,
             snapshots=snapshots,
             snapshot_value=frame,
         )
-
-        # Set the cells with CO2 present to VELOCITY_CO2 to 1
         filled_birdseye_frame = np.where(
             np.any(injection_matrix_frame == VELOCITY_CO2, axis=2),
             VELOCITY_CO2,
             np.nan
         )
-
         im.set_data(filled_birdseye_frame)
         ax.set_title(f"Frame {frame + 1}")
         return [im]
@@ -214,10 +186,8 @@ def plot_cross_section_animation(
         snapshots=snapshots,
         snapshot_value=-1,
     )
+    # Extract the cross section at the specified row (shape: [x, depth])
     cross_section = injection_matrix[:, index, :]
-
-    # Import velocity constants for proper scaling
-    from co2_injection_simulation import VELOCITY_RESERVOIR
 
     # Transpose so x is horizontal, depth is vertical
     im = ax.imshow(
