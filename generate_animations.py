@@ -17,14 +17,14 @@ nz = 100
 caprock_topography, depths = retrieve_sleipner_topography(nz=nz)
 
 # Create and save the animation
-plot_cross_section_animation(
-    index=caprock_topography.shape[1] // 2,
-    snapshots=snapshots,
-    caprock_topography=caprock_topography,
-    depths=depths,
-    save_path=PROJECT_ROOT / "plots" / "flood_fill_cross_section.gif",
-    show=False,
-)
+# plot_cross_section_animation(
+#     index=caprock_topography.shape[1] // 2,
+#     snapshots=snapshots,
+#     caprock_topography=caprock_topography,
+#     depths=depths,
+#     save_path=PROJECT_ROOT / "plots" / "flood_fill_cross_section.gif",
+#     show=False,
+# )
 plot_birdseye_animation(
     snapshots=snapshots,
     caprock_topography=caprock_topography,

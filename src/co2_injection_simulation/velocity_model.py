@@ -3,6 +3,9 @@ from heapq import heappush, heappop
 from typing import Tuple
 
 from co2_injection_simulation import VELOCITY_RESERVOIR, VELOCITY_CO2, VELOCITY_CAPROCK
+from co2_injection_simulation.rust_backend import (
+    _single_source_co2_fill_rust_with_buckets,
+)
 
 
 def _single_source_co2_fill(
@@ -145,8 +148,6 @@ def single_source_co2_fill(
     rust_implementation: bool = False,
 ) -> np.ndarray:  # (nx, ny, nz, total_snapshots)
     if rust_implementation:
-        from co2_injection_simulation.rust_backend import single_source_co2_fill_rust
-
         # Ensure arrays have the correct data types for Rust
         injection_matrix_i32 = injection_matrix.astype(np.int32)
         topography_f64 = topography.astype(np.float64)
@@ -158,7 +159,7 @@ def single_source_co2_fill(
         depths_f64 = np.ascontiguousarray(depths_f64)
 
         print("Debug: Using Rust implementation")
-        return single_source_co2_fill_rust(
+        return _single_source_co2_fill_rust_with_buckets(
             injection_matrix_i32, topography_f64, depths_f64, source, total_snapshots
         )
 

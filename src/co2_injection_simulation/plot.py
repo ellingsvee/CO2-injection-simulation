@@ -70,31 +70,6 @@ def plot_cross_section(
 
     _save_or_show_plot(fig, save_path, show)
 
-
-def plot_cross_section_as_lineplot(
-    topography: np.ndarray,  # 2D matrix of the topography
-    index: int,
-    save_path: Union[str, Path] = None,
-    show: bool = True,
-):
-    # Extract the cross section at the specified row
-    cross_section = topography[:, index]
-
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(cross_section, color="blue", label="Topography")
-    ax.fill_between(
-        range(len(cross_section)), cross_section, color="lightblue", alpha=0.5
-    )
-    ax.set_title("Cross Section of Topography")
-    ax.set_xlabel("Width")
-    ax.set_ylabel("Elevation")
-    ax.legend()
-    ax.invert_yaxis()  # Flip the y-axis so higher depth is down
-
-    _save_or_show_plot(fig, save_path, show)
-
-
 def plot_birdseye_animation(
     snapshots: np.ndarray,
     caprock_topography: np.ndarray,
@@ -126,13 +101,14 @@ def plot_birdseye_animation(
         VELOCITY_CO2,
         np.nan
     )
-    im = ax.imshow(filled_birdseye, aspect=1, cmap="RdBu_r")
-    plt.ylabel("x")
-    plt.xlabel("y")
+    im = ax.imshow(filled_birdseye.T, aspect=1, cmap="RdBu_r")
+    plt.ylabel("y")
+    plt.xlabel("x")
 
 
     def update(frame):
-        print(f"Current frame: {frame}")
+        if frame % 10 == 0:
+            print(f"Current frame: {frame}")
         # Retrieve the injection matrix at the current snapshot
         injection_matrix_frame = get_matrix_from_snapshot(
             caprock_topography=caprock_topography,
@@ -145,7 +121,7 @@ def plot_birdseye_animation(
             VELOCITY_CO2,
             np.nan
         )
-        im.set_data(filled_birdseye_frame)
+        im.set_data(filled_birdseye_frame.T)
         ax.set_title(f"Frame {frame + 1}")
         return [im]
 
@@ -211,7 +187,8 @@ def plot_cross_section_animation(
     plt.colorbar(im, label="Velocity (m/s)")
 
     def update(frame):
-        print(f"Current frame: {frame}")
+        if frame % 10 == 0:
+            print(f"Current frame: {frame}")
         # Retrieve the injection matrix at the current snapshot
         injection_matrix_frame = get_matrix_from_snapshot(
             caprock_topography=caprock_topography,
@@ -219,18 +196,7 @@ def plot_cross_section_animation(
             snapshots=snapshots,
             snapshot_value=frame,
         )
-
-        print(
-            "CO2 cells in frame",
-            frame,
-            ":",
-            np.sum(injection_matrix_frame == VELOCITY_CO2),
-        )
         cross_section_frame = injection_matrix_frame[:, index, :]
-
-        # Debug: Print unique values in this cross-section
-        print(f"Cross-section unique values: {np.unique(cross_section_frame)}")
-
         im.set_data(cross_section_frame.T)
         # Ensure color limits are maintained
         im.set_clim(
