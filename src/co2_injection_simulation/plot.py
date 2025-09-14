@@ -3,10 +3,9 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import Union
 
-from co2_injection_simulation import VELOCITY_CO2, VELOCITY_CAPROCK, PROJECT_ROOT
+from co2_injection_simulation import VELOCITY_CO2, VELOCITY_CAPROCK
 from co2_injection_simulation.utils import (
     get_matrix_from_snapshot,
-    map_topography_to_velocities,
 )
 
 
@@ -96,7 +95,101 @@ def plot_cross_section_as_lineplot(
     _save_or_show_plot(fig, save_path, show)
 
 
+def plot_birdseye_animation(
+    snapshots: np.ndarray,
+    caprock_topography: np.ndarray,
+    depths: np.ndarray,
+    save_path: Union[str, Path] = None,
+    show: bool = True,
+    interval: int = 100,
+):
+    from matplotlib.animation import FuncAnimation
 
+    print("Debug: " + "Creating birdseye animation")
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+
+
+    # # The first frame is the unfilled reservoir
+    # injection_matrix = get_matrix_from_snapshot(
+    #     caprock_topography=caprock_topography,
+    #     depths=depths,
+    #     snapshots=snapshots,
+    #     snapshot_value=-1,
+    # )
+    # cross_section = injection_matrix[:, index, :]
+
+    # Import velocity constants for proper scaling
+    from co2_injection_simulation import VELOCITY_RESERVOIR
+
+    # Transpose so x is horizontal, depth is vertical
+    # im = ax.imshow(
+    #     cross_section.T,
+    #     aspect="auto",
+    #     # cmap="viridis",
+    #     cmap="RdBu_r",
+    #     origin="upper",
+    #     vmin=min(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
+    #     vmax=max(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
+    #     extent=(
+    #         0,
+    #         cross_section.shape[0],
+    #         depths[-1],
+    #         depths[0],
+    #     ),  # x from 0 to width, y from min to max physical depth
+    # )
+
+    injection_matrix = get_matrix_from_snapshot(
+        caprock_topography=caprock_topography,
+        depths=depths,
+        snapshots=snapshots,
+        snapshot_value=-1,
+    )
+
+    filled_birdseye = np.where(
+        np.any(injection_matrix == VELOCITY_CO2, axis=2),
+        VELOCITY_CO2,
+        np.nan
+    )
+    im = ax.imshow(filled_birdseye, aspect=1, cmap="RdBu_r")
+    plt.ylabel("x")
+    plt.xlabel("y")
+
+
+    def update(frame):
+        print(f"Current frame: {frame}")
+        injection_matrix_frame = get_matrix_from_snapshot(
+            caprock_topography=caprock_topography,
+            depths=depths,
+            snapshots=snapshots,
+            snapshot_value=frame,
+        )
+
+        # Set the cells with CO2 present to VELOCITY_CO2 to 1
+        filled_birdseye_frame = np.where(
+            np.any(injection_matrix_frame == VELOCITY_CO2, axis=2),
+            VELOCITY_CO2,
+            np.nan
+        )
+
+        im.set_data(filled_birdseye_frame)
+        ax.set_title(f"Frame {frame + 1}")
+        return [im]
+
+    # The largest value stored in the snapshots matrix
+    total_frames = snapshots.max() + 1
+    print(f"Total frames: {total_frames}")
+    ani = FuncAnimation(fig, update, frames=total_frames, interval=interval, blit=True)
+
+    if save_path:
+        ani.save(save_path, writer="pillow", dpi=100)
+        print(f"Animation saved to: {save_path}")
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
 
 
 def plot_cross_section_animation(
@@ -124,8 +217,8 @@ def plot_cross_section_animation(
     cross_section = injection_matrix[:, index, :]
 
     # Import velocity constants for proper scaling
-    from co2_injection_simulation import VELOCITY_RESERVOIR, VELOCITY_CAPROCK
-    
+    from co2_injection_simulation import VELOCITY_RESERVOIR
+
     # Transpose so x is horizontal, depth is vertical
     im = ax.imshow(
         cross_section.T,
@@ -157,16 +250,23 @@ def plot_cross_section_animation(
             snapshot_value=frame,
         )
 
-        print("CO2 cells in frame", frame, ":", np.sum(injection_matrix_frame == VELOCITY_CO2))
+        print(
+            "CO2 cells in frame",
+            frame,
+            ":",
+            np.sum(injection_matrix_frame == VELOCITY_CO2),
+        )
         cross_section_frame = injection_matrix_frame[:, index, :]
-        
+
         # Debug: Print unique values in this cross-section
         print(f"Cross-section unique values: {np.unique(cross_section_frame)}")
 
         im.set_data(cross_section_frame.T)
         # Ensure color limits are maintained
-        im.set_clim(vmin=min(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2), 
-                   vmax=max(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2))
+        im.set_clim(
+            vmin=min(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
+            vmax=max(VELOCITY_RESERVOIR, VELOCITY_CAPROCK, VELOCITY_CO2),
+        )
         ax.set_title(f"Frame {frame + 1}")
         return [im]
 
@@ -184,32 +284,3 @@ def plot_cross_section_animation(
     else:
         plt.close(fig)
 
-
-
-def plot_cross_section_animation_debug(
-    index: int,
-    snapshots: np.ndarray,
-    caprock_topography: np.ndarray,
-    depths: np.ndarray,
-    save_path: Union[str, Path] = None,
-    show: bool = True,
-    interval: int = 100,
-):
-    test_snapshots = [0, 5, 10, 15, 20]
-
-    for snapshot in test_snapshots:
-        print(f"Debug: Plotting snapshot {snapshot}")
-        injection_matrix = get_matrix_from_snapshot(
-            caprock_topography=caprock_topography,
-            depths=depths,
-            snapshots=snapshots,
-            snapshot_value=snapshot,
-        )
-        plot_cross_section(
-            velocity_matrix=injection_matrix,
-            index=index,
-            depths=depths,
-            save_path=PROJECT_ROOT / "plots" / f"debug_snapshot_{snapshot}.png",
-            show=True,
-        )
-    

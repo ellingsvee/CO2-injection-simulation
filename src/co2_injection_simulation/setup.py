@@ -1,4 +1,4 @@
-from co2_injection_simulation import PROJECT_ROOT, VELOCITY_CAPROCK, VELOCITY_RESERVOIR
+from co2_injection_simulation import PROJECT_ROOT
 from scipy.io import loadmat
 import numpy as np
 from typing import Tuple
@@ -18,11 +18,8 @@ def retrieve_sleipner_topography(nz: int = 100) -> Tuple[np.ndarray, np.ndarray]
     min_val = np.min(caprock_topography)
     max_val = np.max(caprock_topography)
     depths = np.linspace(min_val, max_val, nz + 1)
-    caprock_topography_discrete = np.digitize(caprock_topography, depths) - 1
+    caprock_topography_discrete = np.digitize(caprock_topography, depths[:-1])
     # Map bin indices back to representative values
     caprock_topography_discrete = depths[caprock_topography_discrete]
 
     return caprock_topography_discrete, depths
-
-
-
