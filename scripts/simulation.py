@@ -4,13 +4,13 @@ import time
 import numpy as np
 
 from co2_injection_simulation import PROJECT_ROOT
+from co2_injection_simulation.model import single_source_co2_fill
 from co2_injection_simulation.setup import (
     retrieve_sleipner_topography,
 )
 from co2_injection_simulation.utils import (
     map_topography_to_velocities,
 )
-from co2_injection_simulation.velocity_model import single_source_co2_fill
 
 # Set constants
 nz = 100
@@ -29,7 +29,7 @@ snapshots = single_source_co2_fill(
     depths=depths,
     source=(caprock_topography.shape[0] // 2, caprock_topography.shape[1] // 2),
     rust_implementation=True,  # Choose wether or not to use the rust_implementation
-    use_1d_implementation=True,  # Choose wether or not to use the 1D rust implementation
+    use_1d_implementation=False,  # Choose wether or not to use the 1D rust implementation
 )
 toc = time.time()
 total_time = toc - tic
