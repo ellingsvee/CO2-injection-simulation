@@ -40,4 +40,4 @@ print("Debug: " + "Saving snapshots array")
 simulations_dir = PROJECT_ROOT / "simulations"
 os.makedirs(simulations_dir, exist_ok=True)
 np.save(simulations_dir / "snapshots.npy", snapshots)
-print(f"Snapshots saved to: {simulations_dir / 'snapshots.npy'}")
+print(f"Debug: Snapshots saved to: {simulations_dir / 'snapshots.npy'}")

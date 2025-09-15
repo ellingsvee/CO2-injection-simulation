@@ -107,7 +107,7 @@ def plot_birdseye_animation(
 
     def update(frame):
         if frame % 10 == 0:
-            print(f"Current frame: {frame}")
+            print(f"Debug: Current frame: {frame}")
         # Retrieve the injection matrix at the current snapshot
         injection_matrix_frame = get_matrix_from_snapshot(
             caprock_topography=caprock_topography,
@@ -124,12 +124,11 @@ def plot_birdseye_animation(
 
     # The largest value stored in the snapshots matrix
     total_frames = snapshots.max() + 1
-    print(f"Total frames: {total_frames}")
     ani = FuncAnimation(fig, update, frames=total_frames, interval=interval, blit=True)
 
     if save_path:
         ani.save(save_path, writer="pillow", dpi=100)
-        print(f"Animation saved to: {save_path}")
+        print(f"Debug: Animation saved to: {save_path}")
 
     if show:
         plt.show()
@@ -185,7 +184,7 @@ def plot_cross_section_animation(
 
     def update(frame):
         if frame % 10 == 0:
-            print(f"Current frame: {frame}")
+            print(f"Debug: Current frame: {frame}")
         # Retrieve the injection matrix at the current snapshot
         injection_matrix_frame = get_matrix_from_snapshot(
             caprock_topography=caprock_topography,
@@ -205,12 +204,11 @@ def plot_cross_section_animation(
 
     # The largest value stored in the snapshots matrix
     total_frames = snapshots.max() + 1
-    print(f"Total frames: {total_frames}")
     ani = FuncAnimation(fig, update, frames=total_frames, interval=interval, blit=True)
 
     if save_path:
         ani.save(save_path, writer="pillow", dpi=100)
-        print(f"Animation saved to: {save_path}")
+        print(f"Debug: Animation saved to: {save_path}")
 
     if show:
         plt.show()
