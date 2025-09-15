@@ -1,8 +1,7 @@
 use pyo3::prelude::*;
 
 // The algorithm
-use numpy::ndarray::Array3;
-use numpy::{PyArray1, PyArray3, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3};
+use numpy::{PyArray1, PyReadonlyArray1, PyReadonlyArray2};
 use ordered_float::OrderedFloat;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
 
