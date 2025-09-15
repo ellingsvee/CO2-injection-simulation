@@ -31,13 +31,13 @@ Uses Rust under the hood for more efficient computations.
 3. **Run the simulation:**
 
    ```bash
-   uv run simulation.py
+   uv run scripts/simulation.py
    ```
 
 4. Generate animations
 
    ```bash
-   uv run generate_animations.py
+   uv run scripts/generate_animations.py
    ```
 
 ## Making Changes
