@@ -6,10 +6,10 @@ readme = "README.md"
 authors = [{ name = "ellingsvee", email = "elling.svee@gmail.com" }]
 requires-python = ">=3.13"
 dependencies = [
-    "matplotlib>=3.10.6",
-    "numpy>=2.3.3",
-    "pathlib>=1.0.1",
-    "scipy>=1.16.2",
+  "matplotlib>=3.10.6",
+  "numpy>=2.3.3",
+  "pathlib>=1.0.1",
+  "scipy>=1.16.2",
 ]
 
 [tool.maturin]
@@ -23,9 +23,7 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [dependency-groups]
-dev = [
-    "ruff>=0.13.0",
-]
+dev = ["ruff>=0.13.0"]
 
 [tool.pyright]
 venvPath = "."
