@@ -1,12 +1,15 @@
 from typing import Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.io import loadmat
 
 from co2_injection_simulation import PROJECT_ROOT
 
 
-def retrieve_sleipner_topography(nz: int = 100) -> Tuple[np.ndarray, np.ndarray]:
+def retrieve_sleipner_topography(
+    nz: int = 100,
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     # Load the data
 
     mat_file = PROJECT_ROOT / "zzz.mat"  # Desktop

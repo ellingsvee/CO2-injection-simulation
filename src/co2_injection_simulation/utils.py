@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 
 from co2_injection_simulation import (
     VELOCITY_CAPROCK,
@@ -8,11 +9,12 @@ from co2_injection_simulation import (
 
 
 def map_topography_to_velocities(
-    caprock_topography: np.ndarray,
-    depths: np.ndarray,
-) -> np.ndarray:
+    caprock_topography: NDArray[np.float64],
+    depths: NDArray[np.float64],
+) -> NDArray[np.int32]:
     velocity_matrix = np.zeros(
-        (caprock_topography.shape[0], caprock_topography.shape[1], depths.shape[0])
+        (caprock_topography.shape[0], caprock_topography.shape[1], depths.shape[0]),
+        dtype=np.int32,
     )
 
     caprock_topography_expanded = caprock_topography[
@@ -24,7 +26,13 @@ def map_topography_to_velocities(
     velocity_matrix[~mask] = VELOCITY_RESERVOIR
     return velocity_matrix
 
-def get_matrix_from_snapshot(caprock_topography: np.ndarray, depths: np.ndarray,snapshots: np.ndarray, snapshot_value: int):
+
+def get_matrix_from_snapshot(
+    caprock_topography: NDArray[np.float64],
+    depths: NDArray[np.float64],
+    snapshots: NDArray[np.int32],
+    snapshot_value: int,
+) -> NDArray[np.int32]:
     # Generate the velocity matrix
     injection_matrix = map_topography_to_velocities(caprock_topography, depths=depths)
 
@@ -35,4 +43,3 @@ def get_matrix_from_snapshot(caprock_topography: np.ndarray, depths: np.ndarray,
     injection_matrix[indexes] = VELOCITY_CO2
 
     return injection_matrix
-    

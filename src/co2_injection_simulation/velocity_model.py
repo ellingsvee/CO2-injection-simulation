@@ -2,6 +2,7 @@ from heapq import heappop, heappush
 from typing import Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 
 from co2_injection_simulation import VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR
 from co2_injection_simulation.rust_backend import (
@@ -11,12 +12,12 @@ from co2_injection_simulation.rust_backend import (
 
 
 def _single_source_co2_fill(
-    injection_matrix: np.ndarray,  # (nx, ny, nz)
-    topography: np.ndarray,  # (nx, ny)
-    depths: np.ndarray,  # (nz,)
+    injection_matrix: NDArray[np.int32],  # (nx, ny, nz)
+    topography: NDArray[np.float64],  # (nx, ny)
+    depths: NDArray[np.float64],  # (nz,)
     source: Tuple[int, int],  # (x, y)
     total_snapshots: int = 100,  # Number of snapshots to capture
-) -> np.ndarray:  # (nx, ny, nz, total_snapshots)
+) -> NDArray[np.int32]:  # (nx, ny, nz)
     """
     Simulate upward migration of CO2 through a caprock structure.
 
@@ -142,14 +143,14 @@ def _single_source_co2_fill(
 
 
 def single_source_co2_fill(
-    injection_matrix: np.ndarray,  # (nx, ny, nz)
-    topography: np.ndarray,  # (nx, ny)
-    depths: np.ndarray,  # (nz,)
+    injection_matrix: NDArray[np.int32],  # (nx, ny, nz)
+    topography: NDArray[np.float64],  # (nx, ny)
+    depths: NDArray[np.float64],  # (nz,)
     source: Tuple[int, int],  # (x, y)
     total_snapshots: int = 100,  # Number of snapshots to capture
     rust_implementation: bool = True,
     use_1d_implementation: bool = True,  # New parameter for 1D vectors
-) -> np.ndarray:  # (nx, ny, nz, total_snapshots)
+) -> NDArray[np.int32]:  # (nx, ny, nz)
     if rust_implementation:
         if use_1d_implementation:
             # Ensure arrays have the correct data types for Rust

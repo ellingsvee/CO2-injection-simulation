@@ -3,6 +3,7 @@ from typing import Union
 
 import numpy as np
 from matplotlib import pyplot as plt
+from numpy.typing import NDArray
 
 from co2_injection_simulation import VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR
 from co2_injection_simulation.utils import (
@@ -25,13 +26,13 @@ def _save_or_show_plot(fig, save_path=None, show=True):
 
 
 def plot_birdseye(
-    topography: np.ndarray,
+    caprock_topography: NDArray[np.float64],
     save_path: Union[str, Path] = None,
     show: bool = True,
 ):
     # Create a 2D birds view representation
     fig = plt.figure(figsize=(10, 8))
-    plt.imshow(topography, aspect=1, cmap="RdBu_r")
+    plt.imshow(caprock_topography, aspect=1, cmap="RdBu_r")
     plt.ylabel("x")
     plt.xlabel("y")
     plt.colorbar(label="Velocity (m/s)")
@@ -40,9 +41,9 @@ def plot_birdseye(
 
 
 def plot_cross_section(
-    velocity_matrix: np.ndarray,  # 3D velocity matrix (shape: [y, x, depth])
+    velocity_matrix: NDArray[np.int32],
     index: int,
-    depths: np.ndarray,  # 1D array of physical depth values
+    depths: NDArray,  # 1D array of physical depth values
     save_path: Union[str, Path] = None,
     show: bool = True,
 ):
@@ -71,10 +72,11 @@ def plot_cross_section(
 
     _save_or_show_plot(fig, save_path, show)
 
+
 def plot_birdseye_animation(
-    snapshots: np.ndarray,
-    caprock_topography: np.ndarray,
-    depths: np.ndarray,
+    snapshots: NDArray[np.int32],
+    caprock_topography: NDArray[np.float64],
+    depths: NDArray[np.float64],
     save_path: Union[str, Path] = None,
     show: bool = True,
     interval: int = 100,
@@ -97,14 +99,11 @@ def plot_birdseye_animation(
 
     # Set the cells with CO2 present to VELOCITY_CO2 to 1
     filled_birdseye = np.where(
-        np.any(injection_matrix == VELOCITY_CO2, axis=2),
-        VELOCITY_CO2,
-        np.nan
+        np.any(injection_matrix == VELOCITY_CO2, axis=2), VELOCITY_CO2, np.nan
     )
     im = ax.imshow(filled_birdseye.T, aspect=1, cmap="RdBu_r")
     plt.ylabel("y")
     plt.xlabel("x")
-
 
     def update(frame):
         if frame % 10 == 0:
@@ -117,9 +116,7 @@ def plot_birdseye_animation(
             snapshot_value=frame,
         )
         filled_birdseye_frame = np.where(
-            np.any(injection_matrix_frame == VELOCITY_CO2, axis=2),
-            VELOCITY_CO2,
-            np.nan
+            np.any(injection_matrix_frame == VELOCITY_CO2, axis=2), VELOCITY_CO2, np.nan
         )
         im.set_data(filled_birdseye_frame.T)
         ax.set_title(f"Frame {frame + 1}")
@@ -142,9 +139,9 @@ def plot_birdseye_animation(
 
 def plot_cross_section_animation(
     index: int,
-    snapshots: np.ndarray,
-    caprock_topography: np.ndarray,
-    depths: np.ndarray,
+    snapshots: NDArray[np.int32],
+    caprock_topography: NDArray[np.float64],
+    depths: NDArray,
     save_path: Union[str, Path] = None,
     show: bool = True,
     interval: int = 100,
@@ -219,4 +216,3 @@ def plot_cross_section_animation(
         plt.show()
     else:
         plt.close(fig)
-
