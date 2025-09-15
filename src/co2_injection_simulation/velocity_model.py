@@ -1,8 +1,9 @@
-import numpy as np
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 from typing import Tuple
 
-from co2_injection_simulation import VELOCITY_RESERVOIR, VELOCITY_CO2, VELOCITY_CAPROCK
+import numpy as np
+
+from co2_injection_simulation import VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR
 from co2_injection_simulation.rust_backend import (
     _single_source_co2_fill_rust,
     _single_source_co2_fill_rust_1d,

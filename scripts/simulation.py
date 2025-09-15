@@ -1,16 +1,16 @@
+import os
+import time
+
+import numpy as np
+
+from co2_injection_simulation import PROJECT_ROOT
 from co2_injection_simulation.setup import (
     retrieve_sleipner_topography,
 )
 from co2_injection_simulation.utils import (
     map_topography_to_velocities,
 )
-
-from co2_injection_simulation import PROJECT_ROOT
 from co2_injection_simulation.velocity_model import single_source_co2_fill
-import numpy as np
-import time
-import os
-
 
 # Set constants
 nz = 100

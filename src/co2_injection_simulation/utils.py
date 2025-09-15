@@ -1,6 +1,11 @@
 import numpy as np
-from co2_injection_simulation import VELOCITY_CO2
-from co2_injection_simulation import PROJECT_ROOT, VELOCITY_CAPROCK, VELOCITY_RESERVOIR
+
+from co2_injection_simulation import (
+    VELOCITY_CAPROCK,
+    VELOCITY_CO2,
+    VELOCITY_RESERVOIR,
+)
+
 
 def map_topography_to_velocities(
     caprock_topography: np.ndarray,

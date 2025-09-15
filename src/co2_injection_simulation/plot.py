@@ -1,9 +1,10 @@
-import numpy as np
-from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import Union
 
-from co2_injection_simulation import VELOCITY_CO2, VELOCITY_CAPROCK, VELOCITY_RESERVOIR
+import numpy as np
+from matplotlib import pyplot as plt
+
+from co2_injection_simulation import VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR
 from co2_injection_simulation.utils import (
     get_matrix_from_snapshot,
 )
@@ -85,7 +86,6 @@ def plot_birdseye_animation(
     fig, ax = plt.subplots(figsize=(10, 8))
 
     # Import velocity constants for proper scaling
-    from co2_injection_simulation import VELOCITY_RESERVOIR
 
     # The first frame is the unfilled reservoir
     injection_matrix = get_matrix_from_snapshot(

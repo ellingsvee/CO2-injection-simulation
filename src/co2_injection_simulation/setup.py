@@ -1,7 +1,9 @@
-from co2_injection_simulation import PROJECT_ROOT
-from scipy.io import loadmat
-import numpy as np
 from typing import Tuple
+
+import numpy as np
+from scipy.io import loadmat
+
+from co2_injection_simulation import PROJECT_ROOT
 
 
 def retrieve_sleipner_topography(nz: int = 100) -> Tuple[np.ndarray, np.ndarray]:

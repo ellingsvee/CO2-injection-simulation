@@ -1,16 +1,15 @@
+import os
+
+import numpy as np
+
+from co2_injection_simulation import PROJECT_ROOT
 from co2_injection_simulation.plot import (
     plot_birdseye_animation,
     plot_cross_section_animation,
 )
-
-from co2_injection_simulation import PROJECT_ROOT
-import numpy as np
-
 from co2_injection_simulation.setup import (
     retrieve_sleipner_topography,
 )
-import os
-
 
 # Load the snapshots from the simulation
 print("Debug: " + "Loading snapshots array")
