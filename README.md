@@ -8,9 +8,9 @@ Uses Rust under the hood for more efficient computations.
 
 ## Prerequisites
 
+- uv (See [Install uv](https://docs.astral.sh/uv/getting-started/installation/))
 - Python 3.13+ (I suggest [Install Python](https://docs.astral.sh/uv/guides/install-python/) for installing Python using uv)
 - Rust (See [Install Rust](https://www.rust-lang.org/tools/install))
-- uv (See [uv installation](https://docs.astral.sh/uv/getting-started/installation/))
 
 ## How to use
 
