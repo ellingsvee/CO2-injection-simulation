@@ -1,45 +1,39 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from co2_injection_simulation import (
-    VELOCITY_CAPROCK,
-    VELOCITY_CO2,
-    VELOCITY_RESERVOIR,
-)
+from co2_injection_simulation import VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR
 
 
-def map_topography_to_velocities(
-    caprock_topography: NDArray[np.float64],
-    depths: NDArray[np.float64],
-) -> NDArray[np.int32]:
-    velocity_matrix = np.zeros(
-        (caprock_topography.shape[0], caprock_topography.shape[1], depths.shape[0]),
-        dtype=np.int32,
-    )
+def map_layers_to_caprock_matrix(
+    layers: NDArray[np.float64], depths: NDArray[np.float64], layer_thickness: int = 1
+) -> NDArray[np.float64]:
+    nrow, ncol, N = layers.shape
+    nz = depths.shape[0]
 
-    caprock_topography_expanded = caprock_topography[
-        :, :, np.newaxis
-    ]  # shape (rows, cols, 1)
-    depth_expanded = depths[np.newaxis, np.newaxis, :]  # shape (1, 1, nz)
-    mask = depth_expanded <= caprock_topography_expanded  # shape (rows, cols, nz)
-    velocity_matrix[mask] = VELOCITY_CAPROCK
-    velocity_matrix[~mask] = VELOCITY_RESERVOIR
-    return velocity_matrix
+    caprock_matrix = np.full((nrow, ncol, nz), VELOCITY_RESERVOIR, dtype=np.float64)
+
+    depths_expanded = depths[np.newaxis, np.newaxis, :]
+    i_idx, j_idx = np.meshgrid(np.arange(nrow), np.arange(ncol), indexing="ij")
+    for i in range(N):
+        layer_expanded = layers[:, :, i][:, :, np.newaxis]
+        idx = np.abs(depths_expanded - layer_expanded).argmin(axis=2)
+        for offset in range(layer_thickness):
+            caprock_indices = np.clip(idx + offset, 0, nz - 1)
+            caprock_matrix[i_idx, j_idx, caprock_indices] = VELOCITY_CAPROCK
+
+    return caprock_matrix
 
 
-def get_matrix_from_snapshot(
-    caprock_topography: NDArray[np.float64],
-    depths: NDArray[np.float64],
-    snapshots: NDArray[np.int32],
+def get_reservoir_from_snapshot(
+    caprock_matrix: NDArray[np.float64],
+    snapshots: NDArray[np.float64],
     snapshot_value: int,
-) -> NDArray[np.int32]:
-    # Generate the velocity matrix
-    injection_matrix = map_topography_to_velocities(caprock_topography, depths=depths)
-
-    # Find the indexes where snapshot has value equal to the snapshot_value
+):
+    reservoir_matrix = np.copy(caprock_matrix)
     indexes = np.where((snapshots <= snapshot_value) & (snapshots != -1))
+    reservoir_matrix[indexes] = VELOCITY_CO2
+    return reservoir_matrix
 
-    # Set the velocity at these indexes to VELOCITY_CO2
-    injection_matrix[indexes] = VELOCITY_CO2
 
-    return injection_matrix
+def find_z_index(depths: NDArray[np.float64], target_depth: np.float64) -> int:
+    return int(np.argmin(np.abs(depths - target_depth)))

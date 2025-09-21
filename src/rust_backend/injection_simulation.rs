@@ -1,93 +1,14 @@
 use pyo3::prelude::*;
 
-// The algorithm
-use numpy::{PyArray1, PyReadonlyArray1, PyReadonlyArray2};
+use numpy::ndarray::Array3;
+use numpy::{PyArray3, PyReadonlyArray1, PyReadonlyArray3};
 use ordered_float::OrderedFloat;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
 
 // Velocity constants matching the Python implementation
-const VELOCITY_CAPROCK: i32 = 2607;
-const VELOCITY_RESERVOIR: i32 = 1500;
-const VELOCITY_CO2: i32 = 300;
-
-// 1D matrix wrapper for 3D indexing
-struct Matrix3D1D {
-    data: Vec<i32>,
-    nx: usize,
-    ny: usize,
-    nz: usize,
-}
-
-impl Matrix3D1D {
-    fn new(nx: usize, ny: usize, nz: usize) -> Self {
-        Self {
-            data: vec![0; nx * ny * nz],
-            nx,
-            ny,
-            nz,
-        }
-    }
-
-    fn from_vec(data: Vec<i32>, nx: usize, ny: usize, nz: usize) -> Self {
-        assert_eq!(data.len(), nx * ny * nz);
-        Self { data, nx, ny, nz }
-    }
-
-    #[inline]
-    fn index(&self, x: usize, y: usize, z: usize) -> usize {
-        x * self.ny * self.nz + y * self.nz + z
-    }
-
-    #[inline]
-    fn get(&self, x: usize, y: usize, z: usize) -> i32 {
-        self.data[self.index(x, y, z)]
-    }
-
-    #[inline]
-    fn set(&mut self, x: usize, y: usize, z: usize, value: i32) {
-        let idx = self.index(x, y, z);
-        self.data[idx] = value;
-    }
-
-    fn into_vec(self) -> Vec<i32> {
-        self.data
-    }
-}
-
-// 1D boolean matrix wrapper for visited tracking
-struct BoolMatrix3D1D {
-    data: Vec<bool>,
-    nx: usize,
-    ny: usize,
-    nz: usize,
-}
-
-impl BoolMatrix3D1D {
-    fn new(nx: usize, ny: usize, nz: usize) -> Self {
-        Self {
-            data: vec![false; nx * ny * nz],
-            nx,
-            ny,
-            nz,
-        }
-    }
-
-    #[inline]
-    fn index(&self, x: usize, y: usize, z: usize) -> usize {
-        x * self.ny * self.nz + y * self.nz + z
-    }
-
-    #[inline]
-    fn get(&self, x: usize, y: usize, z: usize) -> bool {
-        self.data[self.index(x, y, z)]
-    }
-
-    #[inline]
-    fn set(&mut self, x: usize, y: usize, z: usize, value: bool) {
-        let idx = self.index(x, y, z);
-        self.data[idx] = value;
-    }
-}
+const VELOCITY_CAPROCK: f64 = 2607.0;
+const VELOCITY_RESERVOIR: f64 = 1500.0;
+const VELOCITY_CO2: f64 = 300.0;
 
 // Spread directions for 8-connectivity
 const SPREAD_DIRECTIONS: [(i32, i32); 8] = [
@@ -177,66 +98,40 @@ fn safe_indices(
 }
 
 #[pyfunction]
-#[pyo3(signature = (injection_matrix_flat, topography, depths, dimensions, source, total_snapshots = 100))]
-pub fn _single_source_co2_fill_rust_1d(
+#[pyo3(signature = (reservoir_matrix, depths, source, total_snapshots = 100))]
+pub fn _injection_simulation_rust(
     py: Python<'_>,
-    injection_matrix_flat: PyReadonlyArray1<i32>,
-    topography: PyReadonlyArray2<f64>,
+    reservoir_matrix: PyReadonlyArray3<f64>,
     depths: PyReadonlyArray1<f64>,
-    dimensions: (usize, usize, usize), // (nx, ny, nz)
-    source: (usize, usize),
+    source: (usize, usize, usize),
     total_snapshots: usize,
-) -> PyResult<Py<PyArray1<i32>>> {
-    let injection_flat = injection_matrix_flat.as_array();
-    let topography_array = topography.as_array();
-    let depths_array = depths.as_array();
+) -> PyResult<Py<PyArray3<i32>>> {
+    let reservoir_matrix = reservoir_matrix.as_array();
+    let depths = depths.as_array();
 
-    let (nx, ny, nz) = dimensions;
-    let (xi, yi) = source;
+    let (nx, ny, nz) = reservoir_matrix.dim();
+    let (xi, yi, zi) = source;
+    let mut zi = zi;
 
-    // Create 1D matrices from flat input
-    let mut injection = Matrix3D1D::from_vec(injection_flat.to_vec(), nx, ny, nz);
-    let mut visited = BoolMatrix3D1D::new(nx, ny, nz);
-    let mut snapshots = Matrix3D1D::new(nx, ny, nz);
-    
-    // Initialize snapshots with -1 (unfilled)
-    for x in 0..nx {
-        for y in 0..ny {
-            for z in 0..nz {
-                snapshots.set(x, y, z, -1);
-            }
-        }
-    }
+    // Create mutable copy of reservoir_matrix matrix
+    let mut reservoir_matrix = reservoir_matrix.to_owned();
+    let mut visited = Array3::<bool>::default((nx, ny, nz));
+    let mut snapshots = Array3::<i32>::from_elem((nx, ny, nz), -1);
 
     // Calculate snapshot interval
-    let n_total_reservoir_cells: usize = injection_flat
+    let n_total_reservoir_cells: usize = reservoir_matrix
         .iter()
         .filter(|&&val| val == VELOCITY_RESERVOIR)
         .count();
     let snapshot_interval = std::cmp::max(1, n_total_reservoir_cells / total_snapshots);
 
-    // Find injection start depth
-    let depth_injection_start = topography_array[[xi, yi]];
-    let mut zi = depths_array
-        .iter()
-        .enumerate()
-        .min_by(|(_, &a), (_, &b)| {
-            (a - depth_injection_start)
-                .abs()
-                .partial_cmp(&(b - depth_injection_start).abs())
-                .unwrap()
-        })
-        .unwrap()
-        .0
-        + 1;
-
     // Validate source position
-    if injection.get(xi, yi, zi) != VELOCITY_RESERVOIR {
+    if reservoir_matrix[[xi, yi, zi]] != VELOCITY_RESERVOIR {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
             "Source must be in reservoir",
         ));
     }
-    if zi > 0 && injection.get(xi, yi, zi - 1) != VELOCITY_CAPROCK {
+    if zi > 0 && reservoir_matrix[[xi, yi, zi - 1]] != VELOCITY_CAPROCK {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
             "Source must be just below caprock",
         ));
@@ -249,25 +144,25 @@ pub fn _single_source_co2_fill_rust_1d(
         let mut queue = DepthOrderedQueue::new();
 
         if is_inside_bounds(xi as i32, yi as i32, zi as i32, nx, ny, nz) {
-            queue.push(depths_array[zi], xi, yi, zi);
+            queue.push(depths[zi], xi, yi, zi);
         }
 
         while let Some((xi_curr, yi_curr, zi_curr)) = queue.pop() {
             // Skip if already visited
-            if visited.get(xi_curr, yi_curr, zi_curr) {
+            if visited[[xi_curr, yi_curr, zi_curr]] {
                 continue;
             }
 
             // Mark as visited
-            visited.set(xi_curr, yi_curr, zi_curr, true);
+            visited[[xi_curr, yi_curr, zi_curr]] = true;
 
             // Check if the cell can be filled with CO2
-            if injection.get(xi_curr, yi_curr, zi_curr) == VELOCITY_RESERVOIR
+            if reservoir_matrix[[xi_curr, yi_curr, zi_curr]] == VELOCITY_RESERVOIR
                 && (zi_curr == 0
-                    || injection.get(xi_curr, yi_curr, zi_curr - 1) != VELOCITY_RESERVOIR)
+                    || reservoir_matrix[[xi_curr, yi_curr, zi_curr - 1]] != VELOCITY_RESERVOIR)
             {
-                injection.set(xi_curr, yi_curr, zi_curr, VELOCITY_CO2);
-                snapshots.set(xi_curr, yi_curr, zi_curr, snapshots_counter);
+                reservoir_matrix[[xi_curr, yi_curr, zi_curr]] = VELOCITY_CO2;
+                snapshots[[xi_curr, yi_curr, zi_curr]] = snapshots_counter;
                 cells_filled_since_snapshot += 1;
 
                 // Take snapshot based on number of cells filled
@@ -283,8 +178,8 @@ pub fn _single_source_co2_fill_rust_1d(
             // Check directly above first
             if zi_curr > 0 {
                 let zi_above = zi_curr - 1;
-                if injection.get(xi_curr, yi_curr, zi_above) == VELOCITY_RESERVOIR {
-                    queue.push(depths_array[zi_above], xi_curr, yi_curr, zi_above);
+                if reservoir_matrix[[xi_curr, yi_curr, zi_above]] == VELOCITY_RESERVOIR {
+                    queue.push(depths[zi_above], xi_curr, yi_curr, zi_above);
                     added_above = true;
                 }
 
@@ -298,8 +193,8 @@ pub fn _single_source_co2_fill_rust_1d(
                         ny,
                         nz,
                     ) {
-                        if injection.get(x_new, y_new, z_new) == VELOCITY_RESERVOIR {
-                            queue.push(depths_array[z_new], x_new, y_new, z_new);
+                        if reservoir_matrix[[x_new, y_new, z_new]] == VELOCITY_RESERVOIR {
+                            queue.push(depths[z_new], x_new, y_new, z_new);
                             added_above = true;
                         }
                     }
@@ -317,8 +212,8 @@ pub fn _single_source_co2_fill_rust_1d(
                         ny,
                         nz,
                     ) {
-                        if injection.get(x_new, y_new, z_new) != VELOCITY_CAPROCK {
-                            queue.push(depths_array[z_new], x_new, y_new, z_new);
+                        if reservoir_matrix[[x_new, y_new, z_new]] != VELOCITY_CAPROCK {
+                            queue.push(depths[z_new], x_new, y_new, z_new);
                         }
                     }
                 }
@@ -328,7 +223,6 @@ pub fn _single_source_co2_fill_rust_1d(
         zi += 1;
     }
 
-    // Convert result to 1D Python array
-    let snapshots_vec = snapshots.into_vec();
-    Ok(PyArray1::from_vec(py, snapshots_vec).into())
+    // Convert result to Python array
+    Ok(PyArray3::from_array(py, &snapshots).into())
 }

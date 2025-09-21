@@ -3,41 +3,39 @@ import time
 
 import numpy as np
 
-from co2_injection_simulation import PROJECT_ROOT
-from co2_injection_simulation.model import single_source_co2_fill
-from co2_injection_simulation.setup import (
-    retrieve_sleipner_topography,
-)
-from co2_injection_simulation.utils import (
-    map_topography_to_velocities,
-)
+from co2_injection_simulation import PROJECT_ROOT, VELOCITY_CAPROCK, VELOCITY_RESERVOIR
+from co2_injection_simulation.injection_simulation import injection_simulation
+from co2_injection_simulation.utils import find_z_index
 
-# Set constants
-nz = 100
-
-# Retrieve the model
-print("Debug: " + "Retireving Sleipner Model")
-
-caprock_topography, depths = retrieve_sleipner_topography(nz=nz)
-caprock_matrix = map_topography_to_velocities(caprock_topography, depths=depths)
-
-# Run the simulation
-tic = time.time()
-snapshots = single_source_co2_fill(
-    injection_matrix=caprock_matrix.copy(),
-    topography=caprock_topography,
-    depths=depths,
-    source=(caprock_topography.shape[0] // 2, caprock_topography.shape[1] // 2),
-    rust_implementation=True,  # Choose wether or not to use the rust_implementation
-    use_1d_implementation=False,  # Choose wether or not to use the 1D rust implementation
-)
-toc = time.time()
-total_time = toc - tic
-print("Debug: " + f"Simulation finished in {total_time:.2} sec!")
-
-# Save the snapshots array
-print("Debug: " + "Saving snapshots array")
 simulations_dir = PROJECT_ROOT / "simulations"
 os.makedirs(simulations_dir, exist_ok=True)
+layers = np.load(simulations_dir / "layers.npy")
+depths = np.load(simulations_dir / "depths.npy")
+caprock_matrix = np.load(simulations_dir / "caprock_matrix.npy")
+
+
+layer_thickness = 5
+xi = caprock_matrix.shape[0] // 2
+yi = caprock_matrix.shape[1] // 2
+zi = find_z_index(depths=depths, target_depth=layers[xi, yi, -2]) + layer_thickness
+
+assert caprock_matrix[xi, yi, zi] == VELOCITY_RESERVOIR, (
+    "Error: Source not in reservoir"
+)
+assert caprock_matrix[xi, yi, zi - 1] == VELOCITY_CAPROCK, (
+    "Error: Source not directly below caprock"
+)
+
+print("Running injection simulation:")
+start_time = time.time()
+snapshots = injection_simulation(
+    reservoir_matrix=caprock_matrix,
+    depths=depths,
+    source=(xi, yi, zi),
+    total_snapshots=100,
+)
+end_time = time.time()
+print(f"Simulation completed in {end_time - start_time:.2f} seconds.")
+
+print("Saving snapshots:")
 np.save(simulations_dir / "snapshots.npy", snapshots)
-print(f"Debug: Snapshots saved to: {simulations_dir / 'snapshots.npy'}")
