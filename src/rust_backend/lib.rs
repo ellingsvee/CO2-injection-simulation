@@ -1,3 +1,7 @@
+pub mod constants;
+pub mod datastucture;
+pub mod utils;
+
 pub mod injection_simulation;
 use injection_simulation::_injection_simulation_rust;
 

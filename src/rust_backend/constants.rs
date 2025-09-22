@@ -1,0 +1,3 @@
+pub const VELOCITY_CAPROCK: f64 = 2607.0;
+pub const VELOCITY_RESERVOIR: f64 = 1500.0;
+pub const VELOCITY_CO2: f64 = 300.0;

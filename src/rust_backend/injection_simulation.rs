@@ -2,13 +2,10 @@ use pyo3::prelude::*;
 
 use numpy::ndarray::Array3;
 use numpy::{PyArray3, PyReadonlyArray1, PyReadonlyArray3};
-use ordered_float::OrderedFloat;
-use std::collections::{BinaryHeap, HashMap, VecDeque};
 
-// Velocity constants matching the Python implementation
-const VELOCITY_CAPROCK: f64 = 2607.0;
-const VELOCITY_RESERVOIR: f64 = 1500.0;
-const VELOCITY_CO2: f64 = 300.0;
+use crate::constants::{VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR};
+use crate::datastucture::DepthOrderedQueue;
+use crate::utils::{is_inside_bounds, safe_indices};
 
 // Spread directions for 8-connectivity
 const SPREAD_DIRECTIONS: [(i32, i32); 8] = [
@@ -21,81 +18,6 @@ const SPREAD_DIRECTIONS: [(i32, i32); 8] = [
     (1, -1),
     (1, 1),
 ];
-
-// Optimized data structure for depth-ordered processing
-// Uses a heap for depth ordering and queues for cells at the same depth
-struct DepthOrderedQueue {
-    // Maps depth to queue of cells at that depth
-    depth_queues: HashMap<OrderedFloat<f64>, VecDeque<(usize, usize, usize)>>,
-    // Min-heap of depths (using Reverse for min-heap behavior)
-    depth_heap: BinaryHeap<std::cmp::Reverse<OrderedFloat<f64>>>,
-}
-
-impl DepthOrderedQueue {
-    fn new() -> Self {
-        DepthOrderedQueue {
-            depth_queues: HashMap::new(),
-            depth_heap: BinaryHeap::new(),
-        }
-    }
-
-    fn push(&mut self, depth: f64, x: usize, y: usize, z: usize) {
-        let depth_key = OrderedFloat(depth);
-
-        // Add to depth queue
-        self.depth_queues
-            .entry(depth_key)
-            .or_default()
-            .push_back((x, y, z));
-
-        // Add depth to heap if not already present
-        let reverse_depth = std::cmp::Reverse(depth_key);
-        if !self.depth_heap.iter().any(|&d| d == reverse_depth) {
-            self.depth_heap.push(reverse_depth);
-        }
-    }
-
-    fn pop(&mut self) -> Option<(usize, usize, usize)> {
-        while let Some(&std::cmp::Reverse(depth_key)) = self.depth_heap.peek() {
-            if let Some(queue) = self.depth_queues.get_mut(&depth_key) {
-                if let Some(cell) = queue.pop_front() {
-                    return Some(cell);
-                } else {
-                    // Queue is empty, remove this depth
-                    self.depth_queues.remove(&depth_key);
-                    self.depth_heap.pop();
-                }
-            } else {
-                // Shouldn't happen, but handle gracefully
-                self.depth_heap.pop();
-            }
-        }
-        None
-    }
-}
-
-// Helper function for bounds checking
-#[inline]
-fn is_inside_bounds(x: i32, y: i32, z: i32, nx: usize, ny: usize, nz: usize) -> bool {
-    x >= 0 && (x as usize) < nx && y >= 0 && (y as usize) < ny && z >= 0 && (z as usize) < nz
-}
-
-// Helper function to safely get array indices
-#[inline]
-fn safe_indices(
-    x: i32,
-    y: i32,
-    z: i32,
-    nx: usize,
-    ny: usize,
-    nz: usize,
-) -> Option<(usize, usize, usize)> {
-    if is_inside_bounds(x, y, z, nx, ny, nz) {
-        Some((x as usize, y as usize, z as usize))
-    } else {
-        None
-    }
-}
 
 #[pyfunction]
 #[pyo3(signature = (reservoir_matrix, depths, source, total_snapshots = 100))]
