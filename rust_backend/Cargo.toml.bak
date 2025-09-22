@@ -1,0 +1,15 @@
+# Note rename from Cargo.toml.bak to Cargo.toml when debugging in Rust. Not optimal workflow, but works for now.
+
+[package]
+name = "rust_backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ndarray-npy = "0.9.1"
+numpy = "0.26.0"
+ordered-float = "5.0.0"
+pyo3 = { version = "0.26", features = ["extension-module", "abi3-py39"] }
+
+[[bin]]
+name = "simulate"

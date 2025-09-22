@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "rust_backend"
-path = "src/rust_backend/lib.rs"
+path = "rust_backend/src/lib.rs"
 # "cdylib" is necessary to produce a shared library for Python to import from.
 crate-type = ["cdylib"]
 
