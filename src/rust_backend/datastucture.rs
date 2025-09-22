@@ -3,6 +3,7 @@ use std::collections::{BinaryHeap, HashMap, VecDeque};
 
 // Optimized data structure for depth-ordered processing
 // Uses a heap for depth ordering and queues for cells at the same depth
+#[derive(Debug, Default)]
 pub struct DepthOrderedQueue {
     // Maps depth to queue of cells at that depth
     depth_queues: HashMap<OrderedFloat<f64>, VecDeque<(usize, usize, usize)>>,
@@ -18,14 +19,14 @@ impl DepthOrderedQueue {
         }
     }
 
-    pub fn push(&mut self, depth: f64, x: usize, y: usize, z: usize) {
+    pub fn push(&mut self, depth: f64, loc: (usize, usize, usize)) {
         let depth_key = OrderedFloat(depth);
 
         // Add to depth queue
         self.depth_queues
             .entry(depth_key)
             .or_default()
-            .push_back((x, y, z));
+            .push_back(loc);
 
         // Add depth to heap if not already present
         let reverse_depth = std::cmp::Reverse(depth_key);

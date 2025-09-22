@@ -28,14 +28,20 @@ def build_sleipner_layers(
 
     layers = np.zeros((nrow, ncol, N), dtype=np.float64)
 
+    # Construct the layers by adding displacements
     for i in range(N):
         layers[:, :, i] = base_topography + displacements[i]
+
+    # Reverse the layers so that the top layer is first
+    layers = np.flip(layers, axis=2)
 
     layers, depths = bin_depths(layers, nz)
     return layers, depths
 
 
-def bin_depths(layers: NDArray[np.float64], nz: int):
+def bin_depths(
+    layers: NDArray[np.float64], nz: int
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     min_val = np.min(layers)
     max_val = np.max(layers)
     depths = np.linspace(min_val, max_val, nz + 1)
