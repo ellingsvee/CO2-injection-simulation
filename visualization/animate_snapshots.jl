@@ -20,12 +20,12 @@ end
 
 using Makie
 using GLMakie
-GLMakie.activate!(inline=false)
+GLMakie.activate!(inline=false);
 
-fig = Figure(resolution=(800, 600))
-ax = Axis3(fig[1, 1])
+fig = Figure(resolution=(800, 600));
+ax = Axis3(fig[1, 1], aspect=:data);
 
-current_volume = Observable(get_reservoir_from_snapshot(caprock_matrix, snapshots, -1))
+current_volume = Observable(get_reservoir_from_snapshot(caprock_matrix, snapshots, -1));
 plt = volume!(ax, current_volume;
     algorithm=:iso,
     isovalue=VELOCITY_CO2,         # replace with your VELOCITY_CAPROCK
@@ -41,17 +41,17 @@ plt = volume!(ax, caprock_matrix;
     colormap=:viridis,
 )
 
-# For a slider to control the snapshot
-n_snapshots = maximum(snapshots)
-slider = Slider(fig[2, 1], range=0:n_snapshots, startvalue=0)
-on(slider.value) do i
-    current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
-end
-
-# To record an animation
+# # For a slider to control the snapshot
 # n_snapshots = maximum(snapshots)
-# record(fig, "reservoir_animation.mp4", 1:n_snapshots) do i
+# slider = Slider(fig[2, 1], range=0:n_snapshots, startvalue=0)
+# on(slider.value) do i
 #     current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
 # end
 
-fig
+# To record an animation
+n_snapshots = maximum(snapshots)
+record(fig, "reservoir_animation.mp4", 1:n_snapshots) do i
+    current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
+end
+
+# fig

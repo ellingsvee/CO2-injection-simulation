@@ -10,6 +10,7 @@ path = "src/rust_backend/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
+ndarray-npy = "0.9.1"
 numpy = "0.26.0"
 ordered-float = "4.0"
 # "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)

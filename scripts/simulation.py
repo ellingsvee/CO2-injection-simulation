@@ -20,6 +20,8 @@ xi = caprock_matrix.shape[0] // 2
 yi = caprock_matrix.shape[1] // 2
 zi = int(layers_idx[xi, yi, -1]) + layer_thickness
 
+print(f"Source coordinates: {(xi, yi, zi)}")
+
 assert caprock_matrix[xi, yi, zi] == VELOCITY_RESERVOIR, (
     "Error: Source not in reservoir"
 )
