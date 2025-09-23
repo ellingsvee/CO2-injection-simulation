@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 def _injection_simulation_python_wrapper(
     reservoir_matrix: NDArray[np.float64],
     depths: NDArray[np.float64],
+    bedrock_indices: NDArray[np.int32],
     max_column_height: int,
     source: Tuple[int, int, int],
     total_snapshots: int = 100,

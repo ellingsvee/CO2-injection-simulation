@@ -41,17 +41,16 @@ plt = volume!(ax, caprock_matrix;
     colormap=:viridis,
 )
 
-# # For a slider to control the snapshot
-# n_snapshots = maximum(snapshots)
-# slider = Slider(fig[2, 1], range=0:n_snapshots, startvalue=0)
-# on(slider.value) do i
-#     current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
-# end
-
-# To record an animation
+# For a slider to control the snapshot
 n_snapshots = maximum(snapshots)
-record(fig, "reservoir_animation.mp4", 1:n_snapshots) do i
+slider = Slider(fig[2, 1], range=0:n_snapshots, startvalue=0)
+on(slider.value) do i
     current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
 end
+fig
 
-# fig
+# # To record an animation
+# n_snapshots = maximum(snapshots)
+# record(fig, "reservoir_animation.mp4", 1:n_snapshots) do i
+#     current_volume[] = get_reservoir_from_snapshot(caprock_matrix, snapshots, i)
+# end

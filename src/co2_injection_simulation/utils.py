@@ -40,8 +40,8 @@ def find_z_index(depths: NDArray[np.float64], target_depth: np.float64) -> np.ui
 
 
 def compute_layers_idx(
-    layers: NDArray[np.float64], depths: NDArray[np.float64]
-) -> NDArray[np.uint]:
+    layers: NDArray[np.float64], depths: NDArray[np.float64], layer_thickness: int = 1
+) -> NDArray[np.int32]:
     diff = np.abs(layers[..., np.newaxis] - depths)
     layers_idx = np.argmin(diff, axis=-1).astype(np.int32)
-    return layers_idx
+    return layers_idx + layer_thickness - 1

@@ -1,9 +1,9 @@
-use numpy::ndarray::{s, Array3, ArrayView1, ArrayView3};
+use numpy::ndarray::{s, Array3, ArrayView1, ArrayView2, ArrayView3};
 
 use crate::constants::{VELOCITY_CAPROCK, VELOCITY_CO2, VELOCITY_RESERVOIR};
 use crate::datastucture::DepthOrderedQueue;
 use crate::utils::{
-    find_closest_caprock_idx, find_height_to_caprock, is_caprock, is_empty, is_inside_bounds,
+    find_closest_caprock_idx, find_height_to_caprock, is_bedrock, is_empty, is_inside_bounds,
     safe_indices,
 };
 
@@ -102,6 +102,7 @@ fn try_to_break_caprock(
     queue: &mut DepthOrderedQueue,
     reservoir_matrix: &mut Array3<f64>,
     depths: &ArrayView1<f64>,
+    bedrock_indices: &ArrayView2<usize>,
     current_cell: (usize, usize, usize),
     max_column_height: usize,
 ) {
@@ -114,7 +115,9 @@ fn try_to_break_caprock(
 
     // Check if the column height has reached the threshold where the caprock breaks
     if find_height_to_caprock(zi_curr, closest_caprock_idx) >= max_column_height {
-        println!("Caprock breaks!");
+        if is_bedrock(bedrock_indices, (xi_curr, yi_curr, closest_caprock_idx)) {
+            return;
+        }
 
         // Change the caprock cell from VELOCITY_CAPROCK to VELOCITY_RESERVOIR
         reservoir_matrix[[xi_curr, yi_curr, closest_caprock_idx]] = VELOCITY_RESERVOIR;
@@ -130,6 +133,7 @@ fn try_to_break_caprock(
 pub fn _injection_simulation_rust(
     reservoir_matrix: ArrayView3<f64>,
     depths: ArrayView1<f64>,
+    bedrock_indices: ArrayView2<usize>, // The indices of the final caprock layer. This layer is impermeable.
     max_column_height: usize,
     source: (usize, usize, usize),
     total_snapshots: usize,
@@ -220,6 +224,7 @@ pub fn _injection_simulation_rust(
                 &mut queue,
                 &mut reservoir_matrix,
                 &depths,
+                &bedrock_indices,
                 (xi_curr, yi_curr, zi_curr),
                 max_column_height,
             );
@@ -236,7 +241,7 @@ pub fn _injection_simulation_rust(
 mod tests {
     use super::*;
     use crate::datastucture::DepthOrderedQueue;
-    use numpy::ndarray::{Array1, Array3};
+    use numpy::ndarray::{Array1, Array2, Array3};
 
     fn make_test_reservoir(nx: usize, ny: usize, nz: usize, fill: f64) -> Array3<f64> {
         Array3::<f64>::from_elem((nx, ny, nz), fill)
@@ -314,12 +319,20 @@ mod tests {
         let mut reservoir = make_test_reservoir(2, 2, 3, VELOCITY_RESERVOIR);
         reservoir[[0, 0, 1]] = VELOCITY_CAPROCK;
         let depths = Array1::from(vec![0.0, 1.0, 2.0]);
+        let bedrock_indices = Array2::from_elem((2, 2), 0); // bedrock at z=0 for all (x,y)
         let mut queue = DepthOrderedQueue::new();
 
         // Place CO2 below caprock
         reservoir[[0, 0, 2]] = VELOCITY_CO2;
 
-        try_to_break_caprock(&mut queue, &mut reservoir, &depths.view(), (0, 0, 2), 1);
+        try_to_break_caprock(
+            &mut queue,
+            &mut reservoir,
+            &depths.view(),
+            &bedrock_indices.view(),
+            (0, 0, 2),
+            1,
+        );
 
         // Caprock at [0,0,1] should have turned into reservoir
         assert_eq!(reservoir[[0, 0, 1]], VELOCITY_RESERVOIR);

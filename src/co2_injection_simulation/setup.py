@@ -33,7 +33,7 @@ def build_sleipner_layers(
         layers[:, :, i] = base_topography + displacements[i]
 
     # Reverse the layers so that the top layer is first
-    layers = np.flip(layers, axis=2)
+    # layers = np.flip(layers, axis=2)
 
     layers, depths = bin_depths(layers, nz)
     return layers, depths

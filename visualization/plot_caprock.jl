@@ -9,5 +9,6 @@ using GLMakie
 GLMakie.activate!(inline=false)
 fig = Figure()
 ax = Axis3(fig[1, 1], aspect=:data)
+reservoir_matrix = reservoir_matrix[:, :, end:-1:1]
 volume!(ax, reservoir_matrix; algorithm=:iso, isovalue=VELOCITY_CAPROCK, colormap=:viridis)
 fig

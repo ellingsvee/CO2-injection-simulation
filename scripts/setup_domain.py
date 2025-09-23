@@ -12,7 +12,7 @@ from co2_injection_simulation.utils import map_layers_to_caprock_matrix
 if __name__ == "__main__":
     print("Setting up the matrices:")
     caprock_topography = retrieve_sleipner_topography()
-    # displacements = np.array([0.05, 0.1, 0.20])
+    # displacements = np.array([0])
     displacements = np.array([0, 0.25])
     layers, depths = build_sleipner_layers(displacements, caprock_topography, nz=100)
     caprock_matrix = map_layers_to_caprock_matrix(

@@ -1,5 +1,5 @@
 use crate::constants::{VELOCITY_CAPROCK, VELOCITY_RESERVOIR};
-use numpy::ndarray::ArrayView1;
+use numpy::ndarray::{ArrayView1, ArrayView2};
 
 /// Helper function for bounds checking
 #[inline]
@@ -34,6 +34,12 @@ pub fn is_caprock(val: f64) -> bool {
 #[inline]
 pub fn is_empty(val: f64) -> bool {
     val == VELOCITY_RESERVOIR
+}
+
+/// Helper function to check if the cell is bedrock (the final impermeable layer)
+#[inline]
+pub fn is_bedrock(bedrock_indices: &ArrayView2<usize>, (x, y, z): (usize, usize, usize)) -> bool {
+    bedrock_indices[[x, y]] == z
 }
 
 /// Find the number of cells from the current index to the nearest caprock
