@@ -34,12 +34,6 @@ Uses Rust under the hood for more efficient computations.
    uv run scripts/simulation.py
    ```
 
-4. Generate animations
-
-   ```bash
-   uv run scripts/generate_animations.py
-   ```
-
 ## Making Changes
 
 **Python code changes:**
