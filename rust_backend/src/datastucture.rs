@@ -52,4 +52,12 @@ impl DepthOrderedQueue {
         }
         None
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.depth_queues.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.depth_queues.values().map(|q| q.len()).sum()
+    }
 }
